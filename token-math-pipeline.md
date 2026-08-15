@@ -19,9 +19,9 @@ This document breaks down the exact mathematical operations performed by a Large
 
 ## 0. Setup & Definitions
 
-* **Context Vector ($\mathbf{h}$):** The output representation from the final Transformer block for the token position `"absolutely"`.
-  $$\text{Vector dimension } d = 4$$
-  $$\mathbf{h} = \begin{bmatrix} 1.2 & -0.5 & 2.0 & 0.1 \end{bmatrix}$$
+* **Context Vector ($\mathbf{h}$):** The output representation from the final Transformer block for the token position `"absolutely"`. Vector dimension $d = 4$.
+
+$$\mathbf{h} = \begin{bmatrix} 1.2 & -0.5 & 2.0 & 0.1 \end{bmatrix}$$
 
 * **Vocabulary ($\mathcal{V}$):** A toy dictionary of size $V = 5$.
   1. `great`
@@ -30,7 +30,7 @@ This document breaks down the exact mathematical operations performed by a Large
   4. `banana`
   5. `the`
 
-* **Output Embedding / Unembedding Matrix ($\mathbf{W}_{\text{out}}$):** Dimensions $d \times V = 4 \times 5$.
+* **Output Embedding Matrix ($\mathbf{W}_{\text{out}}$):** Dimensions $d \times V = 4 \times 5$.
 
 $$\mathbf{W}_{\text{out}} = \begin{bmatrix}
 2.0 & 1.5 & 0.8 & -1.0 & 0.1 \\
@@ -64,6 +64,7 @@ $$\mathbf{z} = \mathbf{h} \cdot \mathbf{W}_{\text{out}}$$
   $$(1.2 \cdot 0.1) + (-0.5 \cdot -0.2) + (2.0 \cdot 0.0) + (0.1 \cdot 1.2) = 0.12 + 0.1 + 0.0 + 0.12 = \mathbf{0.34}$$
 
 ### Raw Logits Vector ($\mathbf{z}$):
+
 $$\mathbf{z} = \begin{bmatrix} 6.29 & -0.29 & 1.89 & -5.42 & 0.34 \end{bmatrix}$$
 
 ---
@@ -78,11 +79,11 @@ $$\mathbf{z}' = \frac{\mathbf{z}}{T}$$
 
 | Token | Raw Logit ($\mathbf{z}$) | Scaled ($T = 0.7$) | Scaled ($T = 2.0$) |
 | :--- | :---: | :---: | :---: |
-| `great` | **6.29** | $\frac{6.29}{0.7} = \mathbf{8.986}$ | $\frac{6.29}{2.0} = \mathbf{3.145}$ |
-| `okay` | **1.89** | $\frac{1.89}{0.7} = \mathbf{2.700}$ | $\frac{1.89}{2.0} = \mathbf{0.945}$ |
-| `the` | **0.34** | $\frac{0.34}{0.7} = \mathbf{0.486}$ | $\frac{0.34}{2.0} = \mathbf{0.170}$ |
-| `terrible` | **-0.29** | $\frac{-0.29}{0.7} = \mathbf{-0.414}$ | $\frac{-0.29}{2.0} = \mathbf{-0.145}$ |
-| `banana` | **-5.42** | $\frac{-5.42}{0.7} = \mathbf{-7.743}$ | $\frac{-5.42}{2.0} = \mathbf{-2.710}$ |
+| `great` | **6.29** | $6.29 / 0.7 = \mathbf{8.986}$ | $6.29 / 2.0 = \mathbf{3.145}$ |
+| `okay` | **1.89** | $1.89 / 0.7 = \mathbf{2.700}$ | $1.89 / 2.0 = \mathbf{0.945}$ |
+| `the` | **0.34** | $0.34 / 0.7 = \mathbf{0.486}$ | $0.34 / 2.0 = \mathbf{0.170}$ |
+| `terrible` | **-0.29** | $-0.29 / 0.7 = \mathbf{-0.414}$ | $-0.29 / 2.0 = \mathbf{-0.145}$ |
+| `banana` | **-5.42** | $-5.42 / 0.7 = \mathbf{-7.743}$ | $-5.42 / 2.0 = \mathbf{-2.710}$ |
 
 ---
 
@@ -99,11 +100,11 @@ $$P(y_i) = \frac{e^{z'_i}}{\sum_{j=1}^{V} e^{z'_j}}$$
 * $e^{-0.414} \approx 0.66$
 * $e^{-7.743} \approx 0.0004$
 
-$$\text{Sum of Exponentials } \left(\sum e^{z'}\right) = 8007.64$$
+Sum of exponentials: $\sum e^{z'} = 8007.64$
 
-* **$P(\text{great})$**: $\frac{7990.47}{8007.64} = \mathbf{99.79\%}$
-* **$P(\text{okay})$**: $\frac{14.88}{8007.64} = \mathbf{0.19\%}$
-* **$P(\text{the})$**: $\frac{1.63}{8007.64} = \mathbf{0.02\%}$
+* **$P(\text{great})$**: $7990.47 / 8007.64 = \mathbf{99.79\%}$
+* **$P(\text{okay})$**: $14.88 / 8007.64 = \mathbf{0.19\%}$
+* **$P(\text{the})$**: $1.63 / 8007.64 = \mathbf{0.02\%}$
 * **$P(\text{terrible})$**: $\approx \mathbf{0.008\%}$
 * **$P(\text{banana})$**: $\approx \mathbf{0.000005\%}$
 
@@ -113,20 +114,24 @@ $$\text{Sum of Exponentials } \left(\sum e^{z'}\right) = 8007.64$$
 
 ## Step 4: Filtering Candidates (Top-K & Top-P)
 
-Let's assume a moderate temperature configuration where candidate probabilities are more balanced:
+Assume a moderate temperature configuration where candidate probabilities are more balanced:
 
 $$\mathbf{P} = \{ \text{great}: 0.70,\, \text{okay}: 0.18,\, \text{terrible}: 0.08,\, \text{the}: 0.035,\, \text{banana}: 0.005 \}$$
 
 ### Case A: Top-K Filtering ($K = 2$)
 Keep only the top $K = 2$ candidates by rank and drop the rest:
+
 $$\mathcal{V}_{\text{filtered}} = \{ \text{great}, \text{okay} \}$$
 
 ### Case B: Top-P / Nucleus Filtering ($P = 0.90$)
 Sort tokens in descending order and compute cumulative probability until the sum reaches $0.90$:
 
-1. $P(\text{great}) = 0.70 \quad (\text{Cumulative} = 0.70 < 0.90) \rightarrow \mathbf{\text{Keep}}$
-2. $P(\text{okay}) = 0.18 \quad (\text{Cumulative} = 0.70 + 0.18 = 0.88 < 0.90) \rightarrow \mathbf{\text{Keep}}$
-3. $P(\text{terrible}) = 0.08 \quad (\text{Cumulative} = 0.88 + 0.08 = 0.96 \ge 0.90) \rightarrow \mathbf{\text{Keep \& Stop}}$
+1. $P(\text{great}) = 0.70$  
+   *(Cumulative sum = 0.70, which is less than 0.90)* $\rightarrow$ **Keep**
+2. $P(\text{okay}) = 0.18$  
+   *(Cumulative sum = 0.70 + 0.18 = 0.88, which is less than 0.90)* $\rightarrow$ **Keep**
+3. $P(\text{terrible}) = 0.08$  
+   *(Cumulative sum = 0.88 + 0.08 = 0.96, which reaches 0.90)* $\rightarrow$ **Keep and Stop**
 
 $$\mathcal{V}_{\text{filtered}} = \{ \text{great}, \text{okay}, \text{terrible} \}$$
 
@@ -140,14 +145,14 @@ Taking the Top-P filtered set $\{ \text{great}: 0.70,\, \text{okay}: 0.18,\, \te
 $$S = 0.70 + 0.18 + 0.08 = 0.96$$
 
 ### 2. Re-Normalize (Scale to sum to 100%):
-* $P_{\text{new}}(\text{great}) = \frac{0.70}{0.96} = \mathbf{72.92\%}$
-* $P_{\text{new}}(\text{okay}) = \frac{0.18}{0.96} = \mathbf{18.75\%}$
-* $P_{\text{new}}(\text{terrible}) = \frac{0.08}{0.96} = \mathbf{8.33\%}$
+* $P_{\text{new}}(\text{great}) = 0.70 / 0.96 = \mathbf{72.92\%}$
+* $P_{\text{new}}(\text{okay}) = 0.18 / 0.96 = \mathbf{18.75\%}$
+* $P_{\text{new}}(\text{terrible}) = 0.08 / 0.96 = \mathbf{8.33\%}$
 
-### 3. Cumulative Distribution for Sampling:
-* $[0.0000, 0.7292) \longrightarrow \text{\texttt{great}}$
-* $[0.7292, 0.9167) \longrightarrow \text{\texttt{okay}} \quad (0.7292 + 0.1875 = 0.9167)$
-* $[0.9167, 1.0000) \longrightarrow \text{\texttt{terrible}}$
+### 3. Cumulative Interval Distribution for Sampling:
+* $[0.0000, 0.7292) \longrightarrow \text{great}$
+* $[0.7292, 0.9167) \longrightarrow \text{okay} \quad (0.7292 + 0.1875 = 0.9167)$
+* $[0.9167, 1.0000) \longrightarrow \text{terrible}$
 
 ### 4. Sampling Selection:
 Draw a random number $r \sim U(0, 1)$.  
